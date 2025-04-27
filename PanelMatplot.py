@@ -4,7 +4,7 @@ import scipy.stats as stats
 import matplotlib.pyplot as plt
 import panel as pn
 
-pn.extension('matplotlib')
+pn.extension()
 
 # Set your data URL
 DATA_URL = "https://raw.githubusercontent.com/joshdawe21/MarketThoughts_Data/349f25b1f000ac4e09f18122d61eb589c2d9659f/Data.csv"
