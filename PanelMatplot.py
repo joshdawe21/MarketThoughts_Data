@@ -7,7 +7,7 @@ import panel as pn
 pn.extension()
 
 # Set your data URL
-DATA_URL = "https://raw.githubusercontent.com/joshdawe21/MarketThoughts_Data/349f25b1f000ac4e09f18122d61eb589c2d9659f/Data.csv"
+DATA_URL = "https://raw.githubusercontent.com/joshdawe21/MarketThoughts_Data/refs/heads/main/Data.csv"
 
 # --- Function 1: Technical Analysis ---
 def technical_analysis(lookup: str, yearlookup: int, data_url: str = DATA_URL) -> pn.pane.Matplotlib:
