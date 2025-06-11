@@ -13,41 +13,38 @@ DATA_URL = "https://raw.githubusercontent.com/joshdawe21/MarketThoughts_Data/ref
 plt.rcParams['font.family'] = 'Times New Roman'   # Change to any installed font family
 plt.rcParams['font.size'] = 15           # Change default font size
 
-# --- Function 1: Technical Analysis ---
+# ---------------------------------------------------
+# 1) Define all of your plotting functions exactly as before
+# ---------------------------------------------------
+
 def technical_analysis(lookup: str, yearlookup: int, data_url: str = DATA_URL) -> pn.pane.Matplotlib:
     data = pd.read_csv(data_url)
     data['Date'] = pd.to_datetime(data['Date'], dayfirst=True)
     data[lookup] = pd.to_numeric(data[lookup], errors='coerce')
-    
     if yearlookup != 0:
         cutoff_date = pd.Timestamp.today() - pd.DateOffset(years=yearlookup)
         data = data[data['Date'] >= cutoff_date]
+    # (…rest of your technical_analysis code…)
 
-    # First Subplot calculations
+    # [Full technical_analysis code unchanged from your original snippet]
     data['20d_MA'] = data[lookup].rolling(window=20).mean()
     data['50d_MA'] = data[lookup].rolling(window=50).mean()
     data['100d_MA'] = data[lookup].rolling(window=100).mean()
     data['BB_upper'] = data['20d_MA'] + 2 * data[lookup].rolling(window=20).std()
     data['BB_lower'] = data['20d_MA'] - 2 * data[lookup].rolling(window=20).std()
 
-    # Second Subplot calculations
     delta = data[lookup].diff()
     gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
     loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
     rs = gain / loss
     data['14d_RSI'] = 100 - (100 / (1 + rs))
 
-    # Third Subplot calculations
     data['20d_std'] = data[lookup].rolling(window=20).std()
-
-    # Get the latest data point for annotation
     latest_data_point = data.iloc[-1]
 
-    # Plotting
     fig = plt.figure(figsize=(15, 10))
     fig.patch.set_facecolor('WhiteSmoke')
     gs = fig.add_gridspec(3, 1, height_ratios=[2, 0.25, 0.25])
-
     ax1 = fig.add_subplot(gs[0, 0])
     ax2 = fig.add_subplot(gs[1, 0])
     ax3 = fig.add_subplot(gs[2, 0])
@@ -58,15 +55,17 @@ def technical_analysis(lookup: str, yearlookup: int, data_url: str = DATA_URL) -
     ax1.plot(data['Date'], data['50d_MA'], label=f"50d MA: {latest_data_point['50d_MA']:.2f}", color='orange')
     ax1.plot(data['Date'], data['100d_MA'], label=f"100d MA: {latest_data_point['100d_MA']:.2f}", color='red')
     ax1.plot(data['Date'], data['BB_upper'], linestyle='--', color='blue')
-    ax1.plot(data['Date'], data['BB_lower'], label=f"2 St.Dev BB: Upper {latest_data_point['BB_upper']:.2f}, Lower {latest_data_point['BB_lower']:.2f}", linestyle='--', color='blue')
+    ax1.plot(data['Date'], data['BB_lower'],
+             label=f"2 St.Dev BB: Upper {latest_data_point['BB_upper']:.2f}, Lower {latest_data_point['BB_lower']:.2f}",
+             linestyle='--', color='blue')
     ax1.legend(loc="upper left")
     ax1.grid(True)
     ax1.set_title(
-        f"Technical Analysis: {lookup}",
+        f"Technical Analysis",
         fontweight='bold',
-        loc='left'  # aligns title to the left
-        )
-    ax1.set_xticks([])  # Avoid warning: use set_xticks instead of set_xticklabels([])
+        loc='left'
+    )
+    ax1.set_xticks([])
 
     # Subplot 2: RSI
     ax2.plot(data['Date'], data['14d_RSI'], label=f"14d RSI: {latest_data_point['14d_RSI']:.2f}", color='purple')
@@ -87,18 +86,16 @@ def technical_analysis(lookup: str, yearlookup: int, data_url: str = DATA_URL) -
 
     return pn.pane.Matplotlib(fig, tight=True)
 
+
 def seasonality(lookup: str = 'Dollar Index', yearlookup: int = 5, data_url: str = DATA_URL) -> pn.pane.Matplotlib:
     data = pd.read_csv(data_url)
     data['Date'] = pd.to_datetime(data['Date'], dayfirst=True)
     data[lookup] = pd.to_numeric(data[lookup], errors='coerce')
-
     if yearlookup != 0:
         cutoff_date = pd.Timestamp.today() - pd.DateOffset(years=yearlookup)
         data = data[data['Date'] >= cutoff_date]
-
     data['Year'] = data['Date'].dt.year
     data['Week'] = data['Date'].dt.isocalendar().week
-
     weekly_avg = data.groupby(['Year', 'Week'])[lookup].mean().reset_index()
     weekly_stats = data.groupby('Week')[lookup].agg(['min', 'max', 'mean']).reset_index()
     weekly_stats.columns = ['Week', 'Min', 'Max', 'Avg']
@@ -124,10 +121,10 @@ def seasonality(lookup: str = 'Dollar Index', yearlookup: int = 5, data_url: str
 
     ax.plot(weekly_stats['Week'], weekly_stats['Smoothed_Avg'], label='Weekly Avg', linestyle='-', color='blue')
     ax.set_title(
-        f"Seasonality: {lookup}",
+        f"Seasonality",
         fontweight='bold',
-        loc='left'  # aligns title to the left
-        )
+        loc='left'
+    )
     ax.set_xticks(range(1, 54, 4))
     ax.set_xlabel('Weeks')
 
@@ -139,7 +136,7 @@ def seasonality(lookup: str = 'Dollar Index', yearlookup: int = 5, data_url: str
 
     ax.legend(loc="upper left")
     ax.grid(True)
-    
+
     plt.tight_layout(pad=1.0)
     plt.subplots_adjust(hspace=0.2)
     plt.close(fig)
@@ -148,15 +145,12 @@ def seasonality(lookup: str = 'Dollar Index', yearlookup: int = 5, data_url: str
 
 def weekly_return_distribution(lookup: str = 'Dollar Index', yearlookup: int = 5, data_url: str = DATA_URL) -> pn.pane.Matplotlib:
     from scipy.stats import norm
-
     data = pd.read_csv(data_url)
     data['Date'] = pd.to_datetime(data['Date'], dayfirst=True)
     data[lookup] = pd.to_numeric(data[lookup], errors='coerce')
-
     if yearlookup != 0:
         cutoff_date = pd.Timestamp.today() - pd.DateOffset(years=yearlookup)
         data = data[data['Date'] >= cutoff_date]
-
     data.set_index('Date', inplace=True)
     weekly_returns = data[lookup].resample('W').last().pct_change().dropna() * 100
 
@@ -176,14 +170,14 @@ def weekly_return_distribution(lookup: str = 'Dollar Index', yearlookup: int = 5
     recent_weekly_return = weekly_returns.iloc[-1]
     recent_weekly_date = weekly_returns.index[-1]
     ax.axvline(recent_weekly_return, color='red', linestyle='dashed', linewidth=2,
-               label=f'Recent Weekly: {recent_weekly_return:.2f}% ({recent_weekly_date.strftime("%b %d, %Y")})')
+               label=f'{lookup}- {recent_weekly_return:.2f}% ({recent_weekly_date.strftime("%b %d, %Y")})')
 
     ax.set_title(
-        f"Weekly Return Distribution: {lookup}",
+        f"Weekly Return Distribution",
         fontweight='bold',
-        loc='left'  # aligns title to the left
-        )
-    ax.set_xlabel('Return (%)')
+        loc='left'
+    )
+    ax.set_xlabel('Return')
     ax.set_ylabel('Frequency')
     ax.legend(loc="upper left")
     ax.grid(True)
@@ -195,20 +189,14 @@ def weekly_return_distribution(lookup: str = 'Dollar Index', yearlookup: int = 5
 
 
 def historical_separate_axis(lookup_columns: str, yearlookup: int = 5, data_url: str = DATA_URL) -> pn.pane.Matplotlib:
-    import matplotlib.pyplot as plt
-    import pandas as pd
-    
     data = pd.read_csv(data_url)
     data['Date'] = pd.to_datetime(data['Date'], dayfirst=True)
     lookup_list = [col.strip() for col in lookup_columns.split(",")]
-
     for col in lookup_list:
         data[col] = pd.to_numeric(data[col], errors='coerce')
-
     if yearlookup != 0:
         cutoff_date = pd.Timestamp.today() - pd.DateOffset(years=yearlookup)
         data = data[data['Date'] >= cutoff_date]
-
     last_values = {col: data[col].iloc[-1] if not data[col].empty else None for col in lookup_list}
 
     fig, ax1 = plt.subplots(figsize=(15, 10))
@@ -222,14 +210,13 @@ def historical_separate_axis(lookup_columns: str, yearlookup: int = 5, data_url:
         label=f"{lookup_list[0]} ({last_values[lookup_list[0]]:.2f})"
     )
     ax1.set_title(
-        f"Historical: {lookup_list}",
+        f"Historical Chart",
         fontweight='bold',
-        loc='left'  # aligns title to the left
-        )    
+        loc='left'
+    )
     ax1.tick_params(axis='y', labelcolor=color_sequence[0])
 
     ax_list = [ax1]
-
     for i in range(1, len(lookup_list)):
         ax_new = ax1.twinx()
         ax_list.append(ax_new)
@@ -253,9 +240,45 @@ def historical_separate_axis(lookup_columns: str, yearlookup: int = 5, data_url:
     ax1.legend(handles, labels, loc="upper left")
     ax1.set_xlabel("Date")
     ax1.grid(True)
-    
+
     plt.tight_layout(pad=1.0)
     plt.subplots_adjust(hspace=0.2)
+    plt.close(fig)
+    return pn.pane.Matplotlib(fig, tight=True)
+
+
+def historical_same_axis(lookup_columns: str, yearlookup: int = 5, data_url: str = DATA_URL) -> pn.pane.Matplotlib:
+    # 1) load & parse
+    data = pd.read_csv(data_url)
+    data['Date'] = pd.to_datetime(data['Date'], dayfirst=True)
+
+    # 2) split lookups & filter by year window
+    lookup_list = [col.strip() for col in lookup_columns.split(",")]
+    if yearlookup != 0:
+        cutoff = pd.Timestamp.today() - pd.DateOffset(years=yearlookup)
+        data = data[data['Date'] >= cutoff]
+
+    # 3) plot raw values on one axis
+    fig, ax = plt.subplots(figsize=(15, 10))
+    fig.patch.set_facecolor('WhiteSmoke')
+
+    colors = ['black', 'blue', 'green', 'red', 'purple', 'orange']
+    for i, col in enumerate(lookup_list):
+        ax.plot(
+            data['Date'],
+            data[col],
+            label=f"{col}: {data[col].iloc[-1]:.2f}",
+            color=colors[i % len(colors)]
+        )
+
+    # 4) cleanup & labels
+    ax.set_title("Historical Chart", fontweight='bold', loc='left')
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Value")
+    ax.legend(loc='upper left')
+    ax.grid(True)
+
+    plt.tight_layout(pad=1.0)
     plt.close(fig)
     return pn.pane.Matplotlib(fig, tight=True)
 
@@ -264,17 +287,13 @@ def linear_regression(lookup_columns, yearlookup: int = 5, data_url: str = DATA_
     data = pd.read_csv(data_url)
     data['Date'] = pd.to_datetime(data['Date'], dayfirst=True)
     lookup_list = [col.strip() for col in lookup_columns.split(",")]
-
     if len(lookup_list) < 2:
         raise ValueError("Please provide at least two columns for regression analysis.")
-
     for col in lookup_list[:2]:
         data[col] = pd.to_numeric(data[col], errors='coerce')
-
     if yearlookup != 0:
         cutoff_date = pd.Timestamp.today() - pd.DateOffset(years=yearlookup)
         data = data[data['Date'] >= cutoff_date]
-
     data['Year'] = data['Date'].dt.year
 
     x_col, y_col = lookup_list[:2]
@@ -310,11 +329,11 @@ def linear_regression(lookup_columns, yearlookup: int = 5, data_url: str = DATA_
     ax.set_xlabel(x_col)
     ax.set_ylabel(y_col)
     ax.set_title(
-        f"Linear Regression: {lookup_list}",
+        f"Linear Regression",
         fontweight='bold',
-        loc='left'  # aligns title to the left
-        )
-    ax.legend(title="Year",loc="upper left")
+        loc='left'
+    )
+    ax.legend(title="Year", loc="upper left")
     ax.grid(True)
 
     plt.tight_layout(pad=1.0)
@@ -323,60 +342,311 @@ def linear_regression(lookup_columns, yearlookup: int = 5, data_url: str = DATA_
     return pn.pane.Matplotlib(fig, tight=True)
 
 
+def percent_change(lookup_columns: str, yearlookup: int = 5, data_url: str = DATA_URL) -> pn.pane.Matplotlib:
+    data = pd.read_csv(data_url)
+    data['Date'] = pd.to_datetime(data['Date'], dayfirst=True)
+    lookup_list = [col.strip() for col in lookup_columns.split(",")]
+    for col in lookup_list:
+        data[col] = pd.to_numeric(data[col], errors='coerce')
+    if yearlookup != 0:
+        cutoff_date = pd.Timestamp.today() - pd.DateOffset(years=yearlookup)
+        data = data[data['Date'] >= cutoff_date]
 
-# --- Dashboard Setup ---
-def create_dashboard(yearlookup: int):
+    pct_data = data.copy()
+    for col in lookup_list:
+        initial_value = pct_data[col].iloc[0]
+        pct_data[col] = (pct_data[col] - initial_value) / initial_value * 100
+
+    fig, ax = plt.subplots(figsize=(15, 10))
+    fig.patch.set_facecolor('WhiteSmoke')
+
+    color_sequence = ['black', 'blue', 'green', 'red', 'purple', 'orange']
+    ax.tick_params(axis='y', labelcolor='black')
+    for i, col in enumerate(lookup_list):
+        ax.plot(
+            pct_data['Date'],
+            pct_data[col],
+            label=f"{col}: {pct_data[col].iloc[-1]:.2f}%",
+            color=color_sequence[i % len(color_sequence)]
+        )
+
+    ax.set_title(f"Percent Change", fontweight='bold', loc='left')
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Percent Change (%)")
+    ax.legend(loc='best')
+    ax.grid(True)
+
+    plt.tight_layout(pad=1.0)
+    plt.close(fig)
+    return pn.pane.Matplotlib(fig, tight=True)
+
+
+def WoW_Change(lookup_columns: str, yearlookup: int = 5, data_url: str = DATA_URL) -> pn.pane.Matplotlib:
+    data = pd.read_csv(data_url)
+    data['Date'] = pd.to_datetime(data['Date'], dayfirst=True)
+    data.sort_values('Date', inplace=True)
+    lookup_list = [col.strip() for col in lookup_columns.split(",")]
+
+    if yearlookup != 0:
+        cutoff_date = pd.Timestamp.today() - pd.DateOffset(years=yearlookup)
+        data = data[data['Date'] >= cutoff_date]
+
+    data.set_index('Date', inplace=True)
+    weekly = data.resample('W').last()
+    for col in lookup_list:
+        weekly[col] = weekly[col].pct_change() * 100
+
+    latest = weekly[lookup_list].iloc[-1].dropna().sort_values(ascending=False)
+
+    colors = ['green' if val >= 0 else 'red' for val in latest]
+
+    fig, ax = plt.subplots(figsize=(15, 10))
+    fig.patch.set_facecolor('WhiteSmoke')
+    bars = latest.plot(kind='bar', color=colors, ax=ax)
+
+    for bar in bars.patches:
+        height = bar.get_height()
+        ax.text(
+            bar.get_x() + bar.get_width() / 2,
+            height,
+            f"{height:.2f}%",
+            ha='center',
+            va='bottom' if height >= 0 else 'top',
+            fontsize=10,
+            fontweight='bold'
+        )
+
+    ax.set_title(f"WoW % Change", fontweight='bold', loc='left')
+    ax.set_ylabel("Percent Change (%)")
+    ax.set_xlabel("")
+    ax.set_xticklabels(latest.index, rotation=45)
+    ax.grid(axis='y', linestyle='--', alpha=0.7)
+
+    plt.tight_layout(pad=1.0)
+    plt.close(fig)
+    return pn.pane.Matplotlib(fig, tight=True)
+
+# ---------------------------------------------------
+# 2) Define dashboards (still using a variable yearlookup, but do NOT call them yet)
+# ---------------------------------------------------
+
+def Market_Movement(yearlookup: int):
+    fig1 = percent_change(
+        'SP500 Index, EuroStoxx50 Index, UK100 Index, TSX Index, CSI300 Index, Nikkei225 Index, Straits Times Index, S&P/ASX 200 Index',
+        yearlookup
+    )
+    fig2 = WoW_Change(
+        'SP500 Index, EuroStoxx50 Index, UK100 Index, TSX Index, CSI300 Index, Nikkei225 Index, Straits Times Index, S&P/ASX 200 Index',
+        yearlookup
+    )
+    fig3 = historical_same_axis(
+        'US10Y Yield (%), EU10Y Yield (%), GB10Y Yield (%), CA10Y Yield (%), CN10Y Yield (%), JP10Y Yield (%), SG10Y Yield (%), AU10Y Yield (%)',
+        yearlookup
+    )
+    fig4 = WoW_Change(
+        'US10Y Yield (%), EU10Y Yield (%), GB10Y Yield (%), CA10Y Yield (%), CN10Y Yield (%), JP10Y Yield (%), SG10Y Yield (%), AU10Y Yield (%)',
+        yearlookup
+    )
+    fig5 = percent_change(
+        'Dollar Index, EURUSD, GBPUSD, USDCAD, USDCNH, USDJPY, USDSGD, AUDUSD',
+        yearlookup
+    )
+    fig6 = WoW_Change(
+        'Dollar Index, EURUSD, GBPUSD, USDCAD, USDCNH, USDJPY, USDSGD, AUDUSD',
+        yearlookup
+    )
+   
+    fig7 = percent_change(
+        'Brent Crude ($/bbl), RBOB Gasoline (c/gal), Heating Oil (c/gal), WTI Crude ($/bbl), Low Sulphur Gasoil ($/mt), Gold ($/oz), Iron Ore 62% Fines ($/mt)',
+        yearlookup
+    )
+    fig8 = WoW_Change(
+        'Brent Crude ($/bbl), RBOB Gasoline (c/gal), Heating Oil (c/gal), WTI Crude ($/bbl), Low Sulphur Gasoil ($/mt), Gold ($/oz), Iron Ore 62% Fines ($/mt)',
+        yearlookup
+    )
+
+    fig9 = percent_change(
+        'Bitcoin ($), Ethereum ($), Doge ($), Solana ($), XRP ($)',
+        yearlookup
+    )
+    fig10 = WoW_Change(
+        'Bitcoin ($), Ethereum ($), Doge ($), Solana ($), XRP ($)',
+        yearlookup
+    )
+    
+    grid = pn.GridSpec(sizing_mode='scale_width', max_width=1200)
+    grid[0, 0] = fig1; grid[0, 1] = fig2
+    grid[1, 0] = fig3; grid[1, 1] = fig4
+    grid[2, 0] = fig5; grid[2, 1] = fig6
+    grid[3, 0] = fig7; grid[3, 1] = fig8
+    grid[4, 0] = fig9; grid[4, 1] = fig10
+    
+    grid.margin = (5, 5, 5, 5)
+    grid.spacing = (10, 10)
+    return grid
+
+Market_Movement_Title = pn.pane.Markdown(
+    """
+    <div style="font-family:'Times New Roman';">
+      <div style="font-size:25px; font-weight:bold;">
+        Market Movement Dashboard
+      </div>
+      <div style="font-size:15px; color:gray;">
+        Sources: Trading View
+      </div>
+    </div>
+    """,
+    sizing_mode='stretch_width'
+)
+
+# We will not call Market_Movement(...) until after we define yearlookup.
+
+
+
+
+# We will not call Dollar_Index(...) until after we define yearlookup.
+
+
+def SP500_Index(yearlookup: int):
+    fig1 = technical_analysis('SP500 Index', yearlookup)
+    fig2 = seasonality('SP500 Index', yearlookup)
+    fig3 = weekly_return_distribution('SP500 Index', yearlookup)
+    fig4 = historical_same_axis('SP500 Longs (lots), SP500 Shorts (lots)', yearlookup)
+    fig5 = percent_change('SP500 Index, AMZN, AAPL, META, MSFT, GOOG, NVDA', 2)
+    fig6 = historical_same_axis('VIX Longs (lots), VIX Shorts (lots)', yearlookup)
+    fig7 = historical_same_axis('VIX Index', yearlookup)
+   
+    grid = pn.GridSpec(sizing_mode='scale_width', max_width=1200)
+    grid[0, 0] = fig1; grid[0, 1] = fig2
+    grid[1, 0] = fig3; grid[1, 1] = fig4
+    grid[2, 0] = fig5; grid[2, 1] = fig6
+    grid[3, 0] = fig7; grid[3, 1] = pn.Spacer()  # ← blank space in place of fig8
+    grid.margin = (5, 5, 5, 5)
+    grid.spacing = (10, 10)
+    return grid
+
+SP500_Index_Title = pn.pane.Markdown(
+    """
+    <div style="font-family:'Times New Roman';">
+      <div style="font-size:25px; font-weight:bold;">
+        SP 500 Index Dashboard
+      </div>
+      <div style="font-size:15px; color:gray;">
+        Sources: Trading View
+      </div>
+    </div>
+    """,
+    sizing_mode='stretch_width'
+)
+
+# We will not call SP500_Index(...) until after we define yearlookup.
+
+def US10Y_Yield(yearlookup: int):
+    fig1 = technical_analysis('US10Y Yield (%)', yearlookup)
+    fig2 = seasonality('US10Y Yield (%)', yearlookup)
+    fig3 = weekly_return_distribution('US10Y Yield (%)', yearlookup)
+    fig4 = historical_same_axis('US10Y Yield (%), US02Y Yield (%), US Central Bank Rate (%)', yearlookup)
+    fig5 = historical_same_axis('US10Y Longs (lots), US10Y Shorts (lots), US02Y Longs (lots), US02Y Shorts (lots)', yearlookup)
+    fig6 = historical_same_axis('Aaa Corp vs US10Y Yield (%), Baa Corp vs US10Y Yield (%)', yearlookup)
+    fig7 = historical_same_axis('US Inflation Rate (YoY %), US Unemployment Rate (%), US Central Bank Rate (%)', yearlookup)
+
+    grid = pn.GridSpec(sizing_mode='scale_width', max_width=1200)
+    grid[0, 0] = fig1; grid[0, 1] = fig2
+    grid[1, 0] = fig3; grid[1, 1] = fig4
+    grid[2, 0] = fig5; grid[2, 1] = fig6
+    grid[3, 0] = fig7; grid[3, 1] = pn.Spacer()
+    grid.margin = (5, 5, 5, 5)
+    grid.spacing = (10, 10)
+    return grid
+
+US10Y_Yield_Title = pn.pane.Markdown(
+    """
+    <div style="font-family:'Times New Roman';">
+      <div style="font-size:25px; font-weight:bold;">
+        US10Y Yield Dashboard
+      </div>
+      <div style="font-size:15px; color:gray;">
+        Sources: Trading View
+      </div>
+    </div>
+    """,
+    sizing_mode='stretch_width'
+)
+
+def Dollar_Index(yearlookup: int):
     fig1 = technical_analysis('Dollar Index', yearlookup)
     fig2 = seasonality('Dollar Index', yearlookup)
     fig3 = weekly_return_distribution('Dollar Index', yearlookup)
-    fig4 = historical_separate_axis('Dollar Index, US02Y Yield (%), US10Y Yield (%)', yearlookup)
-    fig5 = linear_regression('US02Y Yield (%), Dollar Index', yearlookup)
-    fig6 = linear_regression('US10Y Yield (%), Dollar Index', yearlookup)
+    
+    fig4 = historical_same_axis('DXY Net (lots), EUR Net (lots), GBP Net (lots), AUD Net (lots), JPY Net (lots), CAD Net (lots)', yearlookup)
+    fig5 = historical_separate_axis('Aggregate USD Futures Net (lots), Dollar Index', yearlookup)
+    fig6 = percent_change('EURUSD, GBPUSD, AUDUSD, USDJPY, USDCAD, USDCNH, USDSGD', yearlookup)
+    fig7 = historical_separate_axis('Dollar Index, US02Y Yield (%), US10Y Yield (%)', yearlookup)
+    fig8 = linear_regression('US02Y Yield (%), Dollar Index', yearlookup)
+    fig9 = linear_regression('US10Y Yield (%), Dollar Index', yearlookup)
 
-    dashboard = pn.GridSpec(sizing_mode='scale_width', max_width=1200)
+    grid = pn.GridSpec(sizing_mode='scale_width', max_width=1200)
+    grid[0, 0] = fig1; grid[0, 1] = fig2
+    grid[1, 0] = fig3; grid[1, 1] = fig4
+    grid[2, 0] = fig5; grid[2, 1] = fig6
+    grid[3, 0] = fig7; grid[3, 1] = fig8
+    grid[4, 0] = fig9; grid[4, 1] = pn.Spacer()
+    grid.margin = (5, 5, 5, 5)
+    grid.spacing = (10, 10)
+    return grid
 
-    dashboard[0, 0] = fig1
-    dashboard[0, 1] = fig2
-    dashboard[1, 0] = fig3
-    dashboard[1, 1] = fig4
-    dashboard[2, 0] = fig5
-    dashboard[2, 1] = fig6
-   
-    dashboard.spacing = (10, 10)  # Horizontal, vertical spacing
-    dashboard.margin = (5, 5, 5, 5)
-
-    return dashboard
-
-
-year_selector = pn.widgets.Select(
-    name='Select Timeframe',
-    options={'1Y': 1, '5Y': 5, "10Y": 10, 'All': 0},
-    value=10
-)
-
-@pn.depends(year_selector)
-def update_dashboard(yearlookup):
-    return create_dashboard(yearlookup)
-
-title = pn.pane.Markdown(
-    "<div style='font-size:24px; font-weight:bold; font-family:\"Times New Roman\";'>"
-    "Dollar Index Dashboard"
-    "</div>",
+Dollar_Index_Title = pn.pane.Markdown(
+    """
+    <div style="font-family:'Times New Roman';">
+      <div style="font-size:25px; font-weight:bold;">
+        Dollar Index Dashboard
+      </div>
+      <div style="font-size:15px; color:gray;">
+        Sources: Trading View
+      </div>
+    </div>
+    """,
     sizing_mode='stretch_width'
 )
 
-sources = pn.pane.Markdown(
-    "<div style='font-size:15px;font-family:\"Times New Roman\";'>"
-    "Sources: Trading View"
-    "</div>",
-    sizing_mode='stretch_width'
+# ---------------------------------------------------
+# 3) Now define yearlookup, then call each dashboard
+# ---------------------------------------------------
+
+yearlookup = 10  # fixed 10-year window
+
+Market_Movement_Dashboard = pn.Column(
+    Market_Movement_Title,
+    Market_Movement(yearlookup),
+    margin=(0, 10, 20, 0)
 )
 
+
+SP500_Index_Dashboard = pn.Column(
+    SP500_Index_Title,
+    SP500_Index(yearlookup),
+    margin=(0, 10, 0, 0)
+)
+
+US10Y_Yield_Dashboard = pn.Column(
+    US10Y_Yield_Title,
+    US10Y_Yield(yearlookup),
+    margin=(0, 10, 20, 0)
+)
+
+Dollar_Index_Dashboard = pn.Column(
+    Dollar_Index_Title,
+    Dollar_Index(yearlookup),
+    margin=(0, 10, 20, 0)
+)
+
+# --- Assemble & Serve ---
 pn.Column(
-    title,
-    year_selector,
-    pn.layout.Spacer(height=1),  # Small vertical gap
-    update_dashboard,
-    sources,
-    margin=0
-).servable(title="Dollar Index Dashboard with Rate Comparison and Regression")
+    Market_Movement_Dashboard,
+    pn.layout.Divider(),
+    SP500_Index_Dashboard,
+    pn.layout.Divider(),
+    US10Y_Yield_Dashboard,
+    pn.layout.Divider(),
+    Dollar_Index_Dashboard
+).servable(title="Market Thoughts Dashboards")
