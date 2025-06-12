@@ -499,115 +499,7 @@ Market_Movement_Title = pn.pane.Markdown(
     sizing_mode='stretch_width'
 )
 
-# We will not call Market_Movement(...) until after we define yearlookup.
 
-
-
-
-# We will not call Dollar_Index(...) until after we define yearlookup.
-
-
-def SP500_Index(yearlookup: int):
-    fig1 = technical_analysis('SP500 Index', yearlookup)
-    fig2 = seasonality('SP500 Index', yearlookup)
-    fig3 = weekly_return_distribution('SP500 Index', yearlookup)
-    fig4 = historical_same_axis('SP500 Longs (lots), SP500 Shorts (lots)', yearlookup)
-    fig5 = percent_change('SP500 Index, AMZN, AAPL, META, MSFT, GOOG, NVDA', 2)
-    fig6 = historical_same_axis('VIX Longs (lots), VIX Shorts (lots)', yearlookup)
-    fig7 = historical_same_axis('VIX Index', yearlookup)
-   
-    grid = pn.GridSpec(sizing_mode='scale_width', max_width=1200)
-    grid[0, 0] = fig1; grid[0, 1] = fig2
-    grid[1, 0] = fig3; grid[1, 1] = fig4
-    grid[2, 0] = fig5; grid[2, 1] = fig6
-    grid[3, 0] = fig7; grid[3, 1] = pn.Spacer()  # ← blank space in place of fig8
-    grid.margin = (5, 5, 5, 5)
-    grid.spacing = (10, 10)
-    return grid
-
-SP500_Index_Title = pn.pane.Markdown(
-    """
-    <div style="font-family:'Times New Roman';">
-      <div style="font-size:25px; font-weight:bold;">
-        SP 500 Index Dashboard
-      </div>
-      <div style="font-size:15px; color:gray;">
-        Sources: Trading View
-      </div>
-    </div>
-    """,
-    sizing_mode='stretch_width'
-)
-
-# We will not call SP500_Index(...) until after we define yearlookup.
-
-def US10Y_Yield(yearlookup: int):
-    fig1 = technical_analysis('US10Y Yield (%)', yearlookup)
-    fig2 = seasonality('US10Y Yield (%)', yearlookup)
-    fig3 = weekly_return_distribution('US10Y Yield (%)', yearlookup)
-    fig4 = historical_same_axis('US10Y Yield (%), US02Y Yield (%), US Central Bank Rate (%)', yearlookup)
-    fig5 = historical_same_axis('US10Y Longs (lots), US10Y Shorts (lots), US02Y Longs (lots), US02Y Shorts (lots)', yearlookup)
-    fig6 = historical_same_axis('Aaa Corp vs US10Y Yield (%), Baa Corp vs US10Y Yield (%)', yearlookup)
-    fig7 = historical_same_axis('US Inflation Rate (YoY %), US Unemployment Rate (%), US Central Bank Rate (%)', yearlookup)
-
-    grid = pn.GridSpec(sizing_mode='scale_width', max_width=1200)
-    grid[0, 0] = fig1; grid[0, 1] = fig2
-    grid[1, 0] = fig3; grid[1, 1] = fig4
-    grid[2, 0] = fig5; grid[2, 1] = fig6
-    grid[3, 0] = fig7; grid[3, 1] = pn.Spacer()
-    grid.margin = (5, 5, 5, 5)
-    grid.spacing = (10, 10)
-    return grid
-
-US10Y_Yield_Title = pn.pane.Markdown(
-    """
-    <div style="font-family:'Times New Roman';">
-      <div style="font-size:25px; font-weight:bold;">
-        US10Y Yield Dashboard
-      </div>
-      <div style="font-size:15px; color:gray;">
-        Sources: Trading View
-      </div>
-    </div>
-    """,
-    sizing_mode='stretch_width'
-)
-
-def Dollar_Index(yearlookup: int):
-    fig1 = technical_analysis('Dollar Index', yearlookup)
-    fig2 = seasonality('Dollar Index', yearlookup)
-    fig3 = weekly_return_distribution('Dollar Index', yearlookup)
-    
-    fig4 = historical_same_axis('DXY Net (lots), EUR Net (lots), GBP Net (lots), AUD Net (lots), JPY Net (lots), CAD Net (lots)', yearlookup)
-    fig5 = historical_separate_axis('Aggregate USD Futures Net (lots), Dollar Index', yearlookup)
-    fig6 = percent_change('EURUSD, GBPUSD, AUDUSD, USDJPY, USDCAD, USDCNH, USDSGD', yearlookup)
-    fig7 = historical_separate_axis('Dollar Index, US02Y Yield (%), US10Y Yield (%)', yearlookup)
-    fig8 = linear_regression('US02Y Yield (%), Dollar Index', yearlookup)
-    fig9 = linear_regression('US10Y Yield (%), Dollar Index', yearlookup)
-
-    grid = pn.GridSpec(sizing_mode='scale_width', max_width=1200)
-    grid[0, 0] = fig1; grid[0, 1] = fig2
-    grid[1, 0] = fig3; grid[1, 1] = fig4
-    grid[2, 0] = fig5; grid[2, 1] = fig6
-    grid[3, 0] = fig7; grid[3, 1] = fig8
-    grid[4, 0] = fig9; grid[4, 1] = pn.Spacer()
-    grid.margin = (5, 5, 5, 5)
-    grid.spacing = (10, 10)
-    return grid
-
-Dollar_Index_Title = pn.pane.Markdown(
-    """
-    <div style="font-family:'Times New Roman';">
-      <div style="font-size:25px; font-weight:bold;">
-        Dollar Index Dashboard
-      </div>
-      <div style="font-size:15px; color:gray;">
-        Sources: Trading View
-      </div>
-    </div>
-    """,
-    sizing_mode='stretch_width'
-)
 
 # ---------------------------------------------------
 # 3) Now define yearlookup, then call each dashboard
@@ -621,32 +513,8 @@ Market_Movement_Dashboard = pn.Column(
     margin=(0, 10, 20, 0)
 )
 
-
-SP500_Index_Dashboard = pn.Column(
-    SP500_Index_Title,
-    SP500_Index(yearlookup),
-    margin=(0, 10, 0, 0)
-)
-
-US10Y_Yield_Dashboard = pn.Column(
-    US10Y_Yield_Title,
-    US10Y_Yield(yearlookup),
-    margin=(0, 10, 20, 0)
-)
-
-Dollar_Index_Dashboard = pn.Column(
-    Dollar_Index_Title,
-    Dollar_Index(yearlookup),
-    margin=(0, 10, 20, 0)
-)
-
 # --- Assemble & Serve ---
 pn.Column(
     Market_Movement_Dashboard,
-    pn.layout.Divider(),
-    SP500_Index_Dashboard,
-    pn.layout.Divider(),
-    US10Y_Yield_Dashboard,
-    pn.layout.Divider(),
-    Dollar_Index_Dashboard
+    pn.layout.Divider()
 ).servable(title="Market Thoughts Dashboards")
